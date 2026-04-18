@@ -1,0 +1,28 @@
+# Git
+.git
+.gitignore
+
+# Python caching
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Virtual Environments
+.venv/
+venv/
+env/
+
+# Secrets
+.env
+
+# Local data (We want the container to start fresh and use a mounted volume later)
+data/
+
+# MOdal/ML artifacts (Theses live on the gpu container, not the web server)
+YOLO_Runs/
+model/
+*.pt
+
+# UI / Node moduel sif you ever add a build step
+node_modules/

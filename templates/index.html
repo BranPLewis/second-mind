@@ -1,0 +1,2116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Second-Mind</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Manrope:wght@400;500;600&family=Azeret+Mono:wght@400;500;600&display=swap");
+
+    :root {
+      --background: #0f0a14;
+      --foreground: #f5e9e0;
+      --card: #1a1220;
+      --card-soft: #251a2e;
+      --muted: #a89099;
+      --primary: #f5a962;
+      --accent: #c85a6d;
+      --danger: #ef4444;
+      --line: rgba(245, 169, 98, 0.2);
+      --line-soft: rgba(245, 169, 98, 0.1);
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+      --font-display: "Rajdhani", sans-serif;
+      --font-body: "Manrope", sans-serif;
+      --font-mono: "Azeret Mono", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--foreground);
+      background: var(--background);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      background-image:
+        linear-gradient(rgba(245, 169, 98, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(245, 169, 98, 0.08) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.25;
+      pointer-events: none;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      left: 50%;
+      top: -180px;
+      transform: translateX(-50%);
+      width: min(92vw, 1100px);
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center, rgba(245, 169, 98, 0.3) 0%, rgba(200, 90, 109, 0.28) 46%, transparent 72%);
+      filter: blur(110px);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .shell {
+      width: min(100%, 1220px);
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 0 1rem 2.8rem;
+    }
+
+    .brand-stack {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      padding-top: 0.45rem;
+    }
+
+    .brand-logo {
+      width: min(100%, 270px);
+      display: block;
+      margin: 0 auto;
+      filter: drop-shadow(0 0 12px rgba(245, 169, 98, 0.2));
+    }
+
+    .tagline {
+      text-align: center;
+      margin-top: -0.12rem;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      letter-spacing: 0.12em;
+      font-size: 0.64rem;
+      text-transform: uppercase;
+    }
+
+    .reset-wrap {
+      margin-top: 0.22rem;
+    }
+
+    .reset-btn,
+    .action-btn,
+    .component-item {
+      border: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(245, 169, 98, 0.16), rgba(200, 90, 109, 0.18));
+      color: var(--foreground);
+      font-family: var(--font-mono);
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: all 140ms ease;
+    }
+
+    .reset-btn {
+      padding: 0.34rem 0.64rem;
+      border-radius: 8px;
+      font-size: 0.66rem;
+      text-transform: uppercase;
+    }
+
+    @media (min-width: 761px) {
+      .reset-btn {
+        padding: 0.56rem 1.1rem;
+        border-radius: 10px;
+        font-size: 0.78rem;
+      }
+    }
+
+    .reset-btn:hover,
+    .action-btn:hover {
+      border-color: rgba(245, 169, 98, 0.65);
+      box-shadow: 0 0 24px rgba(245, 169, 98, 0.22);
+      transform: translateY(-1px);
+    }
+
+    .stage {
+      min-height: calc(100vh - 56px);
+      padding-top: 1.3rem;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .startup-errors {
+      color: #ffd5d5;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.48);
+      border-radius: 10px;
+      padding: 0.9rem;
+      margin: 0.6rem 0 1rem;
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.12);
+    }
+
+    .upload-zone {
+      max-width: 780px;
+      margin: 3.8rem auto 0;
+      border: 2px dashed rgba(245, 169, 98, 0.4);
+      background: linear-gradient(145deg, rgba(200, 90, 109, 0.15), rgba(245, 169, 98, 0.12));
+      border-radius: 16px;
+      min-height: 390px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      transition: border-color 150ms ease, transform 150ms ease;
+    }
+
+    .upload-zone.dragging {
+      border-color: rgba(245, 169, 98, 0.78);
+      transform: translateY(-2px);
+    }
+
+    .upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      z-index: 2;
+    }
+
+    .upload-content {
+      position: relative;
+      z-index: 1;
+      min-height: inherit;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 2rem;
+      gap: 1rem;
+      pointer-events: none;
+    }
+
+    .upload-icon {
+      width: 98px;
+      height: 98px;
+      border-radius: 999px;
+      border: 1px solid rgba(245, 169, 98, 0.35);
+      background: rgba(245, 169, 98, 0.09);
+      display: grid;
+      place-items: center;
+      font-size: 2.4rem;
+      animation: bob 2s ease-in-out infinite;
+    }
+
+    @keyframes bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-9px); }
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+      margin: 0;
+      font-family: var(--font-display);
+      letter-spacing: 0.03em;
+    }
+
+    .upload-title {
+      font-size: clamp(1.55rem, 2.6vw, 2.2rem);
+      margin-bottom: 0.3rem;
+    }
+
+    .upload-copy {
+      max-width: 520px;
+      margin: 0;
+      color: #c7b8c1;
+      line-height: 1.6;
+    }
+
+    .chip-row {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      background: rgba(245, 169, 98, 0.09);
+      color: #e8d6c8;
+      border-radius: 999px;
+      padding: 0.3rem 0.7rem;
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      letter-spacing: 0.06em;
+    }
+
+    .preview-strip {
+      margin-top: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(37, 26, 46, 0.56);
+      overflow: hidden;
+      max-width: 780px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .preview-strip img {
+      width: 100%;
+      display: block;
+      max-height: 500px;
+      object-fit: contain;
+    }
+
+    .mini-actions {
+      max-width: 780px;
+      margin: 0.5rem auto 0;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .mini-btn {
+      border: 1px solid rgba(245, 169, 98, 0.62);
+      background: linear-gradient(135deg, rgba(245, 169, 98, 0.32), rgba(200, 90, 109, 0.3));
+      color: var(--foreground);
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border-radius: 999px;
+      padding: 0.42rem 0.88rem;
+      cursor: pointer;
+      transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+    }
+
+    .mini-btn:hover {
+      border-color: rgba(245, 169, 98, 0.65);
+      box-shadow: 0 0 20px rgba(245, 169, 98, 0.28);
+      transform: translateY(-1px);
+    }
+
+    .camera-launch-wrap {
+      max-width: 780px;
+      margin: 0.48rem auto 0;
+      display: none;
+      justify-content: center;
+    }
+
+    .camera-launch-btn {
+      border: 1px solid rgba(245, 169, 98, 0.62);
+      background: linear-gradient(135deg, rgba(245, 169, 98, 0.28), rgba(95, 168, 255, 0.28));
+      color: var(--foreground);
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border-radius: 999px;
+      padding: 0.42rem 0.88rem;
+      cursor: pointer;
+      transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+    }
+
+    .camera-launch-btn:hover {
+      border-color: rgba(95, 168, 255, 0.7);
+      box-shadow: 0 0 20px rgba(95, 168, 255, 0.28);
+      transform: translateY(-1px);
+    }
+
+    .camera-panel {
+      max-width: 780px;
+      margin: 0.7rem auto 0;
+      padding: 0.65rem;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(37, 26, 46, 0.72);
+      box-shadow: var(--shadow);
+    }
+
+    .camera-panel video {
+      width: 100%;
+      max-height: 360px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--line-soft);
+      display: block;
+      background: #0b0b10;
+    }
+
+    .camera-actions {
+      display: flex;
+      gap: 0.55rem;
+      justify-content: center;
+      margin-top: 0.6rem;
+    }
+
+    .action-btn {
+      border-radius: 10px;
+      padding: 0.7rem 1.1rem;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+    }
+
+    .action-btn:disabled,
+    .reset-btn:disabled {
+      opacity: 0.55;
+      cursor: default;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .status {
+      min-height: 1.4rem;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      text-align: center;
+      margin: 0.3rem auto 0;
+      max-width: 780px;
+    }
+
+    .status.error {
+      color: #ffc0c0;
+    }
+
+    .processing-image {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      position: relative;
+      background: rgba(37, 26, 46, 0.62);
+      box-shadow: var(--shadow);
+    }
+
+    .processing-image img {
+      width: 100%;
+      max-height: 500px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .scan-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--primary), var(--accent), transparent);
+      box-shadow: 0 0 22px rgba(245, 169, 98, 0.8);
+      top: 0;
+      display: none;
+    }
+
+    .scan-line.scan-down {
+      animation: scanDown 5.2s linear 1;
+    }
+
+    .scan-line.scan-up {
+      animation: scanUp 5.2s linear 1;
+    }
+
+    @keyframes scanDown {
+      0% { top: 0; }
+      100% { top: calc(100% - 3px); }
+    }
+
+    @keyframes scanUp {
+      0% { top: calc(100% - 3px); }
+      100% { top: 0; }
+    }
+
+    .processing-overlay {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(245, 169, 98, 0.2) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(200, 90, 109, 0.2) 1px, transparent 1px);
+      background-size: 22px 22px;
+      opacity: 0.42;
+    }
+
+    .processing-meta {
+      margin-top: 0;
+      min-height: 320px;
+      display: grid;
+      align-content: center;
+      text-align: center;
+    }
+
+    .processing-meta-panel {
+      display: grid;
+      align-content: center;
+    }
+
+    .spinner {
+      width: 56px;
+      height: 56px;
+      border-radius: 999px;
+      border: 2px solid rgba(245, 169, 98, 0.2);
+      border-top-color: var(--primary);
+      margin: 0 auto 0.7rem;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .processing-meta p {
+      margin: 0;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .processing-layout {
+      max-width: 980px;
+      margin: 0 auto;
+      display: grid;
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .processing-image-panel {
+      padding: 0.75rem;
+    }
+
+    .processing-image-panel .mini-actions {
+      max-width: none;
+      margin-top: 0;
+      margin-bottom: 0.55rem;
+    }
+
+    .result-top-actions {
+      width: min(100%, 920px);
+      margin: 0 auto 0.5rem;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.55rem;
+    }
+
+    #cameraLaunchBtnResults {
+      display: none;
+    }
+
+    .result-image-spotlight {
+      width: min(100%, 920px);
+      margin: 0 auto 1rem;
+      scroll-margin-top: 1rem;
+    }
+
+    .spotlight-media {
+      border-width: 1px;
+      box-shadow: var(--shadow);
+    }
+
+    .component-list-panel,
+    .llm-panel,
+    .sources-panel {
+      scroll-margin-top: 1rem;
+    }
+
+    .quick-nav {
+      position: fixed;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 40;
+      display: grid;
+      gap: 0.45rem;
+      width: 170px;
+      padding: 0.55rem;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(15, 10, 20, 0.82);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.42);
+      transition: transform 200ms ease, opacity 200ms ease;
+    }
+
+    .quick-nav.quick-nav-collapsed {
+      transform: translate(130%, -50%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .quick-nav-toggle {
+      position: fixed;
+      right: 0.25rem;
+      top: calc(50% - 142px);
+      z-index: 41;
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      border: 1px solid rgba(245, 169, 98, 0.42);
+      background: linear-gradient(135deg, rgba(200, 90, 109, 0.2), rgba(245, 169, 98, 0.18));
+      color: #fff1e5;
+      font-size: 1rem;
+      line-height: 1;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
+      transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
+    }
+
+    .quick-nav-toggle:hover {
+      border-color: rgba(245, 169, 98, 0.58);
+      box-shadow: 0 0 14px rgba(245, 169, 98, 0.2);
+      background: linear-gradient(135deg, rgba(200, 90, 109, 0.25), rgba(245, 169, 98, 0.23));
+    }
+
+    .quick-tab {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.55rem 0.62rem;
+      text-align: left;
+      color: #e9d7cc;
+      background: rgba(37, 26, 46, 0.56);
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease, transform 140ms ease;
+    }
+
+    .quick-tab:hover:not(:disabled) {
+      border-color: rgba(245, 169, 98, 0.66);
+      background: rgba(245, 169, 98, 0.13);
+      box-shadow: 0 0 16px rgba(245, 169, 98, 0.22);
+      transform: translateY(-1px);
+    }
+
+    .quick-tab.active,
+    .quick-tab:disabled {
+      border-color: rgba(245, 169, 98, 0.82);
+      background: linear-gradient(90deg, rgba(200, 90, 109, 0.22), rgba(245, 169, 98, 0.2));
+      box-shadow: 0 0 16px rgba(245, 169, 98, 0.26);
+      color: #fff3e7;
+      cursor: default;
+      transform: none;
+    }
+
+    .results-grid {
+      display: grid;
+      width: min(100%, 920px);
+      margin: 0.2rem auto 0;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: linear-gradient(170deg, rgba(26, 18, 32, 0.95), rgba(37, 26, 46, 0.62));
+      box-shadow: var(--shadow);
+      padding: 1rem;
+    }
+
+    .panel-title {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 0.8rem;
+      font-size: 1.35rem;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--primary);
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.45; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.16); }
+    }
+
+    .result-media {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      background: rgba(37, 26, 46, 0.5);
+    }
+
+    .image-wrap {
+      position: relative;
+    }
+
+    .result-media img {
+      width: 100%;
+      max-height: 500px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .component-list {
+      margin-top: 0.9rem;
+      max-height: 345px;
+      overflow-y: auto;
+      display: grid;
+      gap: 0.55rem;
+      padding-right: 0.2rem;
+    }
+
+    .component-item {
+      width: 100%;
+      text-align: left;
+      border-radius: 10px;
+      padding: 0.7rem 0.85rem;
+      background: rgba(37, 26, 46, 0.5);
+      text-transform: none;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      box-shadow: none;
+    }
+
+    .component-item:hover {
+      background: rgba(245, 169, 98, 0.14);
+    }
+
+    .component-item.selected {
+      border-color: rgba(245, 169, 98, 0.74);
+      background: linear-gradient(90deg, rgba(200, 90, 109, 0.2), rgba(245, 169, 98, 0.17));
+      box-shadow: 0 0 24px rgba(245, 169, 98, 0.2);
+    }
+
+    .meta {
+      border: 1px solid var(--line-soft);
+      border-radius: 10px;
+      padding: 0.75rem;
+      background: rgba(37, 26, 46, 0.42);
+      display: grid;
+      gap: 0.42rem;
+      font-size: 0.92rem;
+      min-height: 145px;
+    }
+
+    .meta-component-header {
+      display: grid;
+      gap: 0.58rem;
+      align-content: start;
+    }
+
+    .meta-component-name {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.7rem 0.85rem;
+      font-family: var(--font-display);
+      font-size: clamp(1.2rem, 2.2vw, 1.75rem);
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: #fff8f3;
+      line-height: 1.2;
+    }
+
+    .meta-confidence {
+      color: #f4e5de;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .notes-panel {
+      margin-top: 0.8rem;
+      border: 1px solid rgba(200, 90, 109, 0.35);
+      border-left: 4px solid var(--accent);
+      border-radius: 10px;
+      background: rgba(200, 90, 109, 0.1);
+      padding: 0.84rem;
+      min-height: 180px;
+      white-space: pre-wrap;
+      line-height: 1.55;
+      color: #f4e5de;
+    }
+
+    .source-title {
+      margin-top: 0.9rem;
+      margin-bottom: 0.45rem;
+      color: #ddc6be;
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .sources {
+      border: 1px solid var(--line-soft);
+      border-radius: 10px;
+      background: rgba(37, 26, 46, 0.42);
+      max-height: 240px;
+      overflow-y: auto;
+    }
+
+    .citations {
+      border: 1px solid var(--line-soft);
+      border-radius: 10px;
+      background: rgba(37, 26, 46, 0.42);
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .citation-item {
+      border-bottom: 1px solid var(--line-soft);
+      padding: 0.6rem 0.7rem;
+      font-size: 0.78rem;
+      line-height: 1.45;
+      color: #f2dfd0;
+      white-space: pre-wrap;
+      font-family: var(--font-mono);
+    }
+
+    .citation-item:last-child {
+      border-bottom: 0;
+    }
+
+    .source-item {
+      border-bottom: 1px solid var(--line-soft);
+      padding: 0.6rem 0.7rem;
+      font-size: 0.85rem;
+      line-height: 1.45;
+    }
+
+    .source-item:last-child {
+      border-bottom: 0;
+    }
+
+    .source-item a {
+      color: #f0bd8f;
+      text-decoration: none;
+      word-break: break-word;
+    }
+
+    .source-item a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 1050px) {
+      .stage {
+        min-height: calc(100vh - 56px);
+      }
+    }
+
+    @media (max-width: 760px) {
+      #idleStage {
+        --mobile-cta-height: 142px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.55rem;
+        align-items: stretch;
+      }
+
+      #idleStage.hidden,
+      #processingStage.hidden,
+      #resultsStage.hidden {
+        display: none;
+      }
+
+      #idleStage > .upload-zone,
+      #idleStage > .camera-launch-wrap {
+        min-width: 0;
+      }
+
+      .tagline {
+        font-size: 0.56rem;
+        line-height: 1.3;
+        margin-top: -0.14rem;
+      }
+
+      .brand-logo {
+        width: min(100%, 236px);
+      }
+
+      .upload-zone {
+        height: var(--mobile-cta-height);
+        min-height: var(--mobile-cta-height);
+        margin-top: 1.2rem;
+        max-width: none;
+      }
+
+      .upload-content {
+        padding: 1rem 0.85rem;
+        gap: 0.6rem;
+      }
+
+      .upload-title {
+        font-size: 1.02rem;
+        margin-bottom: 0;
+      }
+
+      .upload-copy,
+      .chip-row {
+        display: none;
+      }
+
+      .upload-icon {
+        width: 62px;
+        height: 62px;
+        font-size: 1.5rem;
+      }
+
+      .panel {
+        padding: 0.85rem;
+      }
+
+      .panel-title {
+        font-size: 1.16rem;
+      }
+
+      .mini-actions {
+        margin-top: 0.28rem;
+      }
+
+      .result-image-spotlight {
+        margin-bottom: 0.7rem;
+      }
+
+      .preview-strip {
+        display: none !important;
+      }
+
+      .processing-image-panel {
+        display: none;
+      }
+
+      #processingSubtext {
+        display: none;
+      }
+
+      .result-top-actions {
+        justify-content: center;
+      }
+
+      .result-top-actions .mini-btn,
+      .result-top-actions .camera-launch-btn {
+        min-width: 150px;
+        border-radius: 10px;
+      }
+
+      #cameraLaunchBtnResults {
+        display: inline-grid;
+      }
+
+      .result-top-actions .camera-launch-btn {
+        width: auto;
+        min-height: auto;
+        padding: 0.42rem 0.88rem;
+      }
+
+      .camera-launch-wrap {
+        display: flex;
+        height: var(--mobile-cta-height);
+        margin-top: 1.2rem;
+        max-width: none;
+      }
+
+      .camera-launch-btn {
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        border-radius: 16px;
+        font-size: 0.72rem;
+        display: grid;
+        place-items: center;
+        padding: 0.9rem;
+      }
+
+      .preview-strip,
+      .camera-panel,
+      .mini-actions {
+        grid-column: 1 / -1;
+      }
+
+      #status {
+        grid-column: 1 / -1;
+      }
+
+      #processingStatus,
+      #resultStatus {
+        display: none;
+      }
+
+      .quick-nav {
+        right: 0.25rem;
+        top: 56svh;
+        transform: translateY(-50%);
+        width: 140px;
+        gap: 0.35rem;
+        padding: 0.45rem;
+      }
+
+      .quick-nav.quick-nav-collapsed {
+        transform: translate(145%, -50%);
+      }
+
+      .quick-nav-toggle {
+        right: 0.25rem;
+        top: calc(56svh - 112px);
+        transform: none;
+        bottom: auto;
+        width: 34px;
+        height: 34px;
+        font-size: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.24);
+      }
+
+      .quick-tab {
+        font-size: 0.6rem;
+        padding: 0.48rem 0.5rem;
+      }
+    }
+    /* --- Markdown Styles for Notes Panel --- */
+    .notes-panel h3 {
+      color: #f5e9e0; /* var(--foreground) */
+      font-size: 1.1rem;
+      margin-top: 1.2rem;
+      margin-bottom: 0.4rem;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 0.2rem;
+      font-family: var(--font-display);
+    }
+    .notes-panel h3:first-child {
+      margin-top: 0;
+    }
+    .notes-panel p {
+      margin-bottom: 1rem;
+      margin-top: 0;
+    }
+    .notes-panel ul {
+      margin-top: 0;
+      margin-bottom: 1rem;
+      padding-left: 1.5rem;
+    }
+    .notes-panel li {
+      margin-bottom: 0.3rem;
+    }
+    .notes-panel strong {
+      color: var(--primary); /* Highlight bold text in your orange accent */
+    }
+    .notes-panel code {
+      background: rgba(0,0,0,0.3);
+      padding: 0.1rem 0.3rem;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.85em;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+  <main class="shell">
+    <button id="quickNavToggle" class="quick-nav-toggle hidden" type="button" aria-label="Toggle quick navigation" aria-expanded="true">
+      &lt;&lt;
+    </button>
+
+    <aside id="quickNav" class="quick-nav hidden" aria-label="Quick Navigation">
+      <button id="quickTabImage" class="quick-tab" type="button" data-section="image">Annotated Image</button>
+      <button id="quickTabComponents" class="quick-tab" type="button" data-section="components">Components</button>
+      <button id="quickTabLlm" class="quick-tab" type="button" data-section="llm">LLM Info</button>
+      <button id="quickTabSources" class="quick-tab" type="button" data-section="sources">Source Links</button>
+    </aside>
+
+    <div class="brand-stack">
+      <img class="brand-logo" src="/assets/second-mind_logo_Transparent-1.png" alt="Second Mind" />
+      <div class="tagline">Image Segmentation · Component Identification · AI Analysis</div>
+      <div class="reset-wrap">
+        <button id="resetBtn" class="reset-btn hidden" type="button">Reset</button>
+      </div>
+    </div>
+
+    {% if startup_errors %}
+    <div class="startup-errors">
+      {% for err in startup_errors %}
+      <div>{{ err }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <section id="idleStage" class="stage">
+      <div id="uploadZone" class="upload-zone">
+        <input id="imageInput" type="file" accept="image/*" />
+        <div class="upload-content">
+          <div class="upload-icon">&#8682;</div>
+          <div>
+            <h1 class="upload-title">Upload Image for Analysis</h1>
+            <p class="upload-copy">Drop a PCB image here or click to select. The detector will identify components and the tutor will generate learning notes for selected parts.</p>
+          </div>
+          <div class="chip-row">
+            <span class="chip">PNG</span>
+            <span class="chip">JPG</span>
+            <span class="chip">WEBP</span>
+          </div>
+        </div>
+      </div>
+
+      <input id="cameraInput" type="file" accept="image/*" capture="environment" class="hidden" />
+
+      <div id="cameraLaunchWrap" class="camera-launch-wrap">
+        <button id="cameraLaunchBtn" class="camera-launch-btn" type="button">Use Live Camera</button>
+      </div>
+
+      <div id="cameraPanel" class="camera-panel hidden">
+        <video id="cameraVideo" autoplay playsinline muted></video>
+        <div class="camera-actions">
+          <button id="cameraCaptureBtn" class="mini-btn" type="button">Capture & Analyze</button>
+          <button id="cameraCancelBtn" class="mini-btn" type="button">Cancel</button>
+        </div>
+      </div>
+
+      <div id="miniChangeWrap" class="mini-actions hidden">
+        <button id="changeImageBtn" class="mini-btn" type="button">Change Image</button>
+      </div>
+
+      <div id="previewStrip" class="preview-strip hidden">
+        <img id="previewImage" alt="Uploaded preview" />
+      </div>
+
+      <div id="status" class="status"></div>
+    </section>
+
+    <section id="processingStage" class="stage hidden">
+      <div class="status" id="processingStatus"></div>
+      <div class="processing-layout">
+        <article id="processingImagePanel" class="panel processing-image-panel">
+          <div class="mini-actions">
+            <button id="changeImageBtnProcessing" class="mini-btn" type="button">Change Image</button>
+          </div>
+          <div class="result-media processing-image">
+            <img id="processingImage" alt="Processing preview" />
+            <div id="scanLine" class="scan-line"></div>
+            <div id="processingOverlay" class="processing-overlay"></div>
+          </div>
+        </article>
+        <article class="panel processing-meta processing-meta-panel">
+          <div class="spinner"></div>
+          <h2 id="processingTitle">Running Segmentation Model...</h2>
+          <p id="processingSubtext">Analyzing components</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="resultsStage" class="stage hidden">
+      <div class="status" id="resultStatus"></div>
+      <div class="result-top-actions">
+        <button id="changeImageBtnResults" class="mini-btn" type="button">Change Image</button>
+        <button id="cameraLaunchBtnResults" class="camera-launch-btn" type="button">Use Live Camera</button>
+      </div>
+      <div id="resultImageSpotlight" class="result-image-spotlight">
+        <div class="result-media spotlight-media">
+          <div id="imageWrap" class="image-wrap">
+            <img id="annotatedImage" alt="Annotated result" />
+          </div>
+        </div>
+      </div>
+      <div class="results-grid">
+        <article id="componentListPanel" class="panel component-list-panel">
+          <div id="componentList" class="component-list"></div>
+        </article>
+
+        <article id="llmPanel" class="panel llm-panel">
+          <div id="meta" class="meta"></div>
+          <div id="notes" class="notes-panel"></div>
+          <div id="sourcesPanel" class="sources-panel">
+            <h4 class="source-title">Sources</h4>
+            <div id="sources" class="sources"></div>
+          </div>
+          <div id="citationsPanel" class="sources-panel">
+            <h4 class="source-title">Citations</h4>
+            <div id="citations" class="citations">
+              {% if citations %}
+                {% for citation in citations %}
+                  <pre class="citation-item">{{ citation }}</pre>
+                {% endfor %}
+              {% else %}
+                <div class="citation-item">No citations found in citations.txt</div>
+              {% endif %}
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const imageInput = document.getElementById("imageInput");
+    const resetBtn = document.getElementById("resetBtn");
+    const uploadZone = document.getElementById("uploadZone");
+    const cameraInput = document.getElementById("cameraInput");
+    const cameraLaunchBtn = document.getElementById("cameraLaunchBtn");
+    const cameraLaunchWrap = document.getElementById("cameraLaunchWrap");
+    const cameraPanel = document.getElementById("cameraPanel");
+    const cameraVideo = document.getElementById("cameraVideo");
+    const cameraCaptureBtn = document.getElementById("cameraCaptureBtn");
+    const cameraCancelBtn = document.getElementById("cameraCancelBtn");
+    const miniChangeWrap = document.getElementById("miniChangeWrap");
+    const changeImageBtn = document.getElementById("changeImageBtn");
+    const changeImageBtnResults = document.getElementById("changeImageBtnResults");
+    const cameraLaunchBtnResults = document.getElementById("cameraLaunchBtnResults");
+    const changeImageBtnProcessing = document.getElementById("changeImageBtnProcessing");
+    const statusBox = document.getElementById("status");
+    const resultStatus = document.getElementById("resultStatus");
+    const processingStatus = document.getElementById("processingStatus");
+    const previewStrip = document.getElementById("previewStrip");
+    const previewImage = document.getElementById("previewImage");
+    const processingImage = document.getElementById("processingImage");
+    const processingTitle = document.getElementById("processingTitle");
+    const processingSubtext = document.getElementById("processingSubtext");
+    const scanLine = document.getElementById("scanLine");
+    const processingOverlay = document.getElementById("processingOverlay");
+    const quickNav = document.getElementById("quickNav");
+    const quickNavToggle = document.getElementById("quickNavToggle");
+    const quickTabImage = document.getElementById("quickTabImage");
+    const quickTabComponents = document.getElementById("quickTabComponents");
+    const quickTabLlm = document.getElementById("quickTabLlm");
+    const quickTabSources = document.getElementById("quickTabSources");
+
+    const idleStage = document.getElementById("idleStage");
+    const processingStage = document.getElementById("processingStage");
+    const resultsStage = document.getElementById("resultsStage");
+    const processingImagePanel = document.getElementById("processingImagePanel");
+
+    const annotatedImage = document.getElementById("annotatedImage");
+    const resultImageSpotlight = document.getElementById("resultImageSpotlight");
+    const componentListPanel = document.getElementById("componentListPanel");
+    const llmPanel = document.getElementById("llmPanel");
+    const sourcesPanel = document.getElementById("sourcesPanel");
+    const componentList = document.getElementById("componentList");
+    const meta = document.getElementById("meta");
+    const notes = document.getElementById("notes");
+    const sources = document.getElementById("sources");
+
+    let components = [];
+    let selectedLabel = null;
+    let currentFile = null;
+    let activeCameraStream = null;
+    let uploadedImageData = "";
+    let latestSources = [];
+    let latestScrapeErrors = [];
+    let scanCycleTimeoutId = null;
+    let resultScrollTimeoutId = null;
+    let customScrollFrameId = null;
+    let activeQuickSection = "image";
+    let quickNavCollapsed = false;
+
+    const sectionTargets = {
+      image: resultImageSpotlight,
+      components: componentListPanel,
+      llm: llmPanel,
+      sources: sourcesPanel,
+    };
+
+    const quickTabs = {
+      image: quickTabImage,
+      components: quickTabComponents,
+      llm: quickTabLlm,
+      sources: quickTabSources,
+    };
+
+    function isMobileViewport() {
+      return window.matchMedia("(max-width: 760px)").matches;
+    }
+
+    function applyQuickNavCollapsedState() {
+      quickNav.classList.toggle("quick-nav-collapsed", quickNavCollapsed);
+      quickNavToggle.textContent = quickNavCollapsed ? ">>" : "<<";
+      quickNavToggle.setAttribute("aria-expanded", String(!quickNavCollapsed));
+    }
+
+    function setQuickNavCollapsed(collapsed) {
+      quickNavCollapsed = Boolean(collapsed);
+      applyQuickNavCollapsedState();
+    }
+
+    function applyQuickNavDefaultForViewport() {
+      setQuickNavCollapsed(isMobileViewport());
+    }
+
+    function stopCustomScroll() {
+      if (customScrollFrameId) {
+        cancelAnimationFrame(customScrollFrameId);
+        customScrollFrameId = null;
+      }
+    }
+
+    function easeInOutCubic(progress) {
+      return progress < 0.5
+        ? 4 * progress * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+    }
+
+    function getScrollTargetY(target, block = "start") {
+      const targetRect = target.getBoundingClientRect();
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+      const currentY = window.scrollY || window.pageYOffset || 0;
+      let offset = 0;
+
+      if (block === "center") {
+        offset = (viewportHeight - targetRect.height) / 2;
+      } else if (block === "end") {
+        offset = viewportHeight - targetRect.height;
+      }
+
+      const rawTargetY = currentY + targetRect.top - offset;
+      const maxScrollY = Math.max(0, document.documentElement.scrollHeight - viewportHeight);
+      return Math.min(Math.max(rawTargetY, 0), maxScrollY);
+    }
+
+    function clearResultAutoscroll() {
+      if (resultScrollTimeoutId) {
+        clearTimeout(resultScrollTimeoutId);
+        resultScrollTimeoutId = null;
+      }
+    }
+
+    function smoothScrollTo(target, block = "start", duration = 1200) {
+      if (!target) {
+        return;
+      }
+
+      stopCustomScroll();
+      const startY = window.scrollY || window.pageYOffset || 0;
+      const targetY = getScrollTargetY(target, block);
+      const distance = targetY - startY;
+
+      if (Math.abs(distance) < 2) {
+        window.scrollTo(0, targetY);
+        return;
+      }
+
+      const totalDuration = Math.max(450, Number(duration) || 1200);
+      const startTime = performance.now();
+
+      function step(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / totalDuration, 1);
+        const eased = easeInOutCubic(progress);
+        window.scrollTo(0, startY + distance * eased);
+
+        if (progress < 1) {
+          customScrollFrameId = requestAnimationFrame(step);
+          return;
+        }
+
+        customScrollFrameId = null;
+      }
+
+      customScrollFrameId = requestAnimationFrame(step);
+    }
+
+    function setActiveQuickSection(sectionKey) {
+      activeQuickSection = sectionKey;
+      for (const [key, tab] of Object.entries(quickTabs)) {
+        if (!tab) {
+          continue;
+        }
+        const isActive = key === sectionKey;
+        tab.classList.toggle("active", isActive);
+        tab.disabled = isActive;
+      }
+    }
+
+    function updateActiveQuickTabFromViewport() {
+      if (resultsStage.classList.contains("hidden")) {
+        return;
+      }
+
+      const viewportCenter = (window.innerHeight || document.documentElement.clientHeight || 0) / 2;
+      let insideKey = null;
+      let closestKey = activeQuickSection;
+      let closestDistance = Number.POSITIVE_INFINITY;
+
+      for (const [key, target] of Object.entries(sectionTargets)) {
+        if (!target) {
+          continue;
+        }
+        const rect = target.getBoundingClientRect();
+        if (rect.top <= viewportCenter && rect.bottom >= viewportCenter) {
+          insideKey = key;
+        }
+        const sectionCenter = rect.top + rect.height / 2;
+        const distance = Math.abs(sectionCenter - viewportCenter);
+
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestKey = key;
+        }
+      }
+
+      setActiveQuickSection(insideKey || closestKey);
+    }
+
+    function renderNotesMarkdown(markdownText) {
+      const safeMarkdown = typeof markdownText === "string" ? markdownText : "";
+      notes.dataset.rawMarkdown = safeMarkdown;
+      notes.innerHTML = safeMarkdown ? marked.parse(safeMarkdown) : "";
+    }
+
+    function scrollProcessingImageToCenter() {
+      requestAnimationFrame(() => {
+        smoothScrollTo(processingImagePanel, "center", 1400);
+      });
+    }
+
+    function spotlightAnnotatedImageThenList() {
+      clearResultAutoscroll();
+      requestAnimationFrame(() => {
+        smoothScrollTo(resultImageSpotlight, "center", 1500);
+        resultScrollTimeoutId = setTimeout(() => {
+          smoothScrollTo(componentListPanel, "start", 1500);
+          resultScrollTimeoutId = null;
+        }, 3600);
+      });
+    }
+
+    function setStatus(message, isError = false) {
+      statusBox.textContent = message;
+      statusBox.classList.toggle("error", isError);
+      resultStatus.textContent = message;
+      resultStatus.classList.toggle("error", isError);
+      processingStatus.textContent = message;
+      processingStatus.classList.toggle("error", isError);
+    }
+
+    function stopScanAnimation() {
+      if (scanCycleTimeoutId) {
+        clearTimeout(scanCycleTimeoutId);
+        scanCycleTimeoutId = null;
+      }
+      scanLine.classList.remove("scan-down", "scan-up");
+      scanLine.style.display = "none";
+      scanLine.style.top = "0";
+    }
+
+    function runScanAnimation() {
+      stopScanAnimation();
+      scanLine.style.display = "block";
+      scanLine.classList.add("scan-down");
+      scanCycleTimeoutId = setTimeout(() => {
+        scanLine.classList.remove("scan-down");
+        scanLine.classList.add("scan-up");
+      }, 5200);
+    }
+
+    function setStage(stage) {
+      idleStage.classList.toggle("hidden", stage !== "idle");
+      processingStage.classList.toggle("hidden", stage !== "processing");
+      resultsStage.classList.toggle("hidden", stage !== "results");
+      resetBtn.classList.toggle("hidden", stage === "idle");
+      quickNav.classList.toggle("hidden", stage !== "results");
+      quickNavToggle.classList.toggle("hidden", stage !== "results");
+      if (stage === "results") {
+        applyQuickNavDefaultForViewport();
+        updateActiveQuickTabFromViewport();
+      } else {
+        setActiveQuickSection("image");
+        applyQuickNavDefaultForViewport();
+      }
+    }
+
+    function clearResultsOnly() {
+      annotatedImage.removeAttribute("src");
+      meta.innerHTML = "";
+      notes.innerHTML = "";
+      notes.dataset.rawMarkdown = "";
+      componentList.innerHTML = "";
+      sources.innerHTML = "";
+      components = [];
+      selectedLabel = null;
+      latestSources = [];
+      latestScrapeErrors = [];
+    }
+
+    async function persistState(state) {
+      try {
+        const response = await fetch("/api/save_state", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(state),
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.warn("State save failed:", response.status, errorText);
+        }
+      } catch (_error) {
+        console.warn("State save request failed.");
+      }
+    }
+
+    function compressDataUrl(dataUrl, maxSide = 1400, quality = 0.8) {
+      return new Promise((resolve) => {
+        if (!dataUrl || !dataUrl.startsWith("data:image/")) {
+          resolve(dataUrl || "");
+          return;
+        }
+
+        const image = new Image();
+        image.onload = () => {
+          const width = image.naturalWidth || image.width;
+          const height = image.naturalHeight || image.height;
+          const scale = Math.min(1, maxSide / Math.max(width, height));
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.max(1, Math.round(width * scale));
+          canvas.height = Math.max(1, Math.round(height * scale));
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            resolve(dataUrl);
+            return;
+          }
+          ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL("image/jpeg", quality));
+        };
+        image.onerror = () => resolve(dataUrl);
+        image.src = dataUrl;
+      });
+    }
+
+    function plainObject(input) {
+      return input && typeof input === "object" && !Array.isArray(input) ? input : null;
+    }
+
+    async function persistCurrentState(overrides = {}) {
+      const payload = currentStatePayload(overrides);
+      payload.uploaded_image = await compressDataUrl(payload.uploaded_image, 1200, 0.75);
+      payload.annotated_image = await compressDataUrl(payload.annotated_image, 1400, 0.78);
+
+      const savedDetection = plainObject(payload.last_detection_result) || {};
+      payload.last_detection_result = {
+        ...savedDetection,
+        uploaded_image: payload.uploaded_image,
+        annotated_image: payload.annotated_image,
+      };
+
+      await persistState(payload);
+    }
+
+    function currentStatePayload(overrides = {}) {
+      return {
+        uploaded_image: uploadedImageData || "",
+        annotated_image: annotatedImage.getAttribute("src") || "",
+        components: components,
+        detected: components.length > 0,
+        total_detections: components.reduce((sum, c) => sum + (Number(c.count) || 0), 0),
+        selected_label: selectedLabel,
+        notes: notes.dataset.rawMarkdown || "",
+        sources: latestSources,
+        scrape_errors: latestScrapeErrors,
+        status: resultStatus.textContent || statusBox.textContent || "",
+        meta_html: meta.innerHTML || "",
+        last_detection_result: {
+          uploaded_image: uploadedImageData || "",
+          annotated_image: annotatedImage.getAttribute("src") || "",
+          components: components,
+          detected: components.length > 0,
+          total_detections: components.reduce((sum, c) => sum + (Number(c.count) || 0), 0),
+          status: resultStatus.textContent || statusBox.textContent || "",
+        },
+        last_llm_response: {
+          selected_label: selectedLabel,
+          learning_notes: notes.dataset.rawMarkdown || "",
+          sources: latestSources,
+          scrape_errors: latestScrapeErrors,
+        },
+        ...overrides,
+      };
+    }
+
+    function markSelectedButton(label) {
+      for (const node of componentList.querySelectorAll(".component-item")) {
+        node.classList.toggle("selected", node.dataset.label === label);
+      }
+    }
+
+    function fullReset(shouldPersist = true) {
+      stopCamera();
+      stopScanAnimation();
+      clearResultAutoscroll();
+      stopCustomScroll();
+      clearResultsOnly();
+      imageInput.value = "";
+      cameraInput.value = "";
+      currentFile = null;
+      uploadedImageData = "";
+      previewImage.removeAttribute("src");
+      processingImage.removeAttribute("src");
+      previewStrip.classList.add("hidden");
+      cameraPanel.classList.add("hidden");
+      miniChangeWrap.classList.add("hidden");
+      changeImageBtn.classList.add("hidden");
+      uploadZone.classList.remove("hidden");
+      cameraLaunchWrap.classList.remove("hidden");
+      setStatus("");
+      setStage("idle");
+      if (shouldPersist) {
+        void persistCurrentState({
+            uploaded_image: "",
+            annotated_image: "",
+            components: [],
+            detected: false,
+            total_detections: 0,
+            selected_label: null,
+            notes: "",
+            sources: [],
+            scrape_errors: [],
+            status: "",
+            meta_html: "",
+            last_detection_result: {
+              uploaded_image: "",
+              annotated_image: "",
+              components: [],
+              detected: false,
+              total_detections: 0,
+              status: "",
+            },
+            last_llm_response: {
+              selected_label: null,
+              learning_notes: "",
+              sources: [],
+              scrape_errors: [],
+            },
+          });
+      }
+    }
+
+    function renderSources(sourceEntries, scrapeErrors = []) {
+      sources.innerHTML = "";
+
+      const validSources = Array.isArray(sourceEntries) ? sourceEntries : [];
+      const validErrors = Array.isArray(scrapeErrors) ? scrapeErrors : [];
+      latestSources = validSources;
+      latestScrapeErrors = validErrors;
+
+      if (!validSources.length && !validErrors.length) {
+        sources.innerHTML = "<div class='source-item'>No source notes yet.</div>";
+        return;
+      }
+
+      for (const src of validSources) {
+        const div = document.createElement("div");
+        div.className = "source-item";
+        const safeSource = src.source || "unknown";
+        const safeTitle = src.title || "Untitled";
+        const safeSnippet = src.snippet || "";
+        const safeUrl = src.url || "";
+        div.innerHTML = `
+          <div><strong>[${safeSource}]</strong> ${safeTitle}</div>
+          <div>${safeSnippet}</div>
+          ${safeUrl ? `<div><a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${safeUrl}</a></div>` : ""}
+        `;
+        sources.appendChild(div);
+      }
+
+      for (const err of validErrors) {
+        const div = document.createElement("div");
+        div.className = "source-item";
+        div.innerHTML = `<div><strong>Source warning:</strong> ${err}</div>`;
+        sources.appendChild(div);
+      }
+    }
+
+    function setMeta(component) {
+      const confidencePercent = Math.round((Number(component.confidence) || 0) * 100);
+      const componentColor = component.color || "#f5a962";
+      meta.innerHTML = `
+        <div class="meta-component-header">
+          <div
+            class="meta-component-name"
+            style="
+              border-color: ${componentColor};
+              box-shadow: 0 0 24px ${componentColor}66;
+              background: linear-gradient(135deg, rgba(0, 0, 0, 0.34), rgba(0, 0, 0, 0.2)), ${componentColor};
+            "
+          >
+            ${component.label}
+          </div>
+          <div class="meta-confidence">Confidence: ${confidencePercent}%</div>
+        </div>
+      `;
+    }
+
+    function renderComponentList(items) {
+      componentList.innerHTML = "";
+
+      if (!items.length) {
+        componentList.innerHTML = "<div class='source-item'>No components found.</div>";
+        return;
+      }
+
+      for (const component of items) {
+        const confidencePercent = Math.round((Number(component.confidence) || 0) * 100);
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "component-item";
+        btn.dataset.label = component.label;
+        btn.innerHTML = `<strong>${component.label}</strong><br><span style="opacity:.82;">confidence ${confidencePercent}%</span>`;
+        btn.style.borderLeft = `8px solid ${component.color || "#f5a962"}`;
+        btn.addEventListener("click", () => selectComponent(component.label));
+        componentList.appendChild(btn);
+      }
+    }
+
+    async function fetchExplanation(component) {
+      const response = await fetch("/api/explain_component", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          label: component.label,
+          confidence: component.confidence,
+          center: component.center,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to explain component.");
+      }
+      return data;
+    }
+
+    async function selectComponent(label) {
+      const component = components.find((c) => c.label === label);
+      if (!component) {
+        setStatus("Selected component is no longer available.", true);
+        return;
+      }
+
+      selectedLabel = label;
+      markSelectedButton(label);
+      requestAnimationFrame(() => {
+        smoothScrollTo(llmPanel, "start", 1400);
+      });
+
+      setMeta(component);
+      renderNotesMarkdown("Generating LLM explanation...");
+      setStatus(`Selected ${component.label}. Fetching learning notes...`);
+
+      try {
+        const explanation = await fetchExplanation(component);
+        renderNotesMarkdown(explanation.learning_notes || "No learning notes returned.");
+        renderSources(explanation.sources, explanation.scrape_errors);
+        setStatus(`Notes ready for ${component.label}.`);
+        void persistCurrentState();
+      } catch (err) {
+        renderNotesMarkdown("");
+        renderSources([], []);
+        setStatus(err.message, true);
+      }
+    }
+
+    function setLocalPreview(sourceUrl) {
+      previewImage.src = sourceUrl;
+      processingImage.src = sourceUrl;
+      previewStrip.classList.remove("hidden");
+    }
+
+    async function analyzeCurrentImage(file) {
+      if (!file) {
+        setStatus("Please choose an image first.", true);
+        return;
+      }
+
+      clearResultAutoscroll();
+      stopCustomScroll();
+      setStage("processing");
+      scrollProcessingImageToCenter();
+      processingTitle.textContent = "Running Segmentation Model...";
+      processingSubtext.textContent = "Analyzing components";
+      runScanAnimation();
+      processingOverlay.style.display = "block";
+      setStatus("Processing image with YOLO + local Llama 3...");
+
+      try {
+        const formData = new FormData();
+        formData.append("image", file);
+
+        const response = await fetch("/api/analyze", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || "Analysis failed.");
+        }
+
+        stopScanAnimation();
+        processingOverlay.style.display = "none";
+        setStage("results");
+
+        annotatedImage.src = `data:image/jpeg;base64,${data.annotated_image}`;
+        spotlightAnnotatedImageThenList();
+        components = Array.isArray(data.components) ? data.components : [];
+        renderComponentList(components);
+
+        if (!data.detected) {
+          meta.innerHTML = "<strong>No components detected.</strong>";
+          renderNotesMarkdown(data.message || "Try another image with a clearer PCB.");
+          renderSources([], []);
+          setStatus("No components were detected.");
+          void persistCurrentState();
+          return;
+        }
+
+        meta.innerHTML = "<div>Select any component from the list to view detailed notes.</div>";
+        renderNotesMarkdown("Select a component from the list to generate learning notes.");
+        renderSources([], []);
+        setStatus(`Detected ${data.total_detections} component instance(s) across ${components.length} component type(s).`);
+        void persistCurrentState();
+      } catch (err) {
+        stopScanAnimation();
+        setStage("idle");
+        stopCustomScroll();
+        setStatus(err.message, true);
+      }
+    }
+
+    function fileToDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = () => reject(new Error("Failed reading image."));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function stopCamera() {
+      if (!activeCameraStream) {
+        return;
+      }
+      for (const track of activeCameraStream.getTracks()) {
+        track.stop();
+      }
+      activeCameraStream = null;
+      cameraVideo.srcObject = null;
+    }
+
+    async function startLiveCamera() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        cameraInput.click();
+        return;
+      }
+
+      try {
+        stopCamera();
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: "environment" },
+          },
+          audio: false,
+        });
+        activeCameraStream = stream;
+        cameraVideo.srcObject = stream;
+        cameraPanel.classList.remove("hidden");
+        uploadZone.classList.add("hidden");
+        cameraLaunchWrap.classList.add("hidden");
+        setStatus("Camera ready. Capture when the board is in frame.");
+      } catch (_error) {
+        cameraInput.click();
+      }
+    }
+
+    async function startLiveCameraFromResults() {
+      stopCamera();
+      setStage("idle");
+      uploadZone.classList.add("hidden");
+      cameraLaunchWrap.classList.add("hidden");
+      miniChangeWrap.classList.add("hidden");
+      await startLiveCamera();
+    }
+
+    async function captureFromLiveCamera() {
+      if (!activeCameraStream || !cameraVideo.videoWidth || !cameraVideo.videoHeight) {
+        setStatus("Camera not ready yet. Please wait a moment.", true);
+        return;
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = cameraVideo.videoWidth;
+      canvas.height = cameraVideo.videoHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        setStatus("Could not capture camera frame.", true);
+        return;
+      }
+
+      ctx.drawImage(cameraVideo, 0, 0, canvas.width, canvas.height);
+
+      const blob = await new Promise((resolve) => {
+        canvas.toBlob((out) => resolve(out), "image/jpeg", 0.95);
+      });
+
+      if (!blob) {
+        setStatus("Could not capture camera frame.", true);
+        return;
+      }
+
+      const cameraFile = new File([blob], "camera-capture.jpg", { type: "image/jpeg" });
+      stopCamera();
+      cameraPanel.classList.add("hidden");
+      await handleLocalFile(cameraFile);
+    }
+
+    async function handleLocalFile(file) {
+      if (!file || !file.type.startsWith("image/")) {
+        setStatus("Please choose a valid image file.", true);
+        return;
+      }
+
+      currentFile = file;
+      try {
+        uploadedImageData = await fileToDataUrl(file);
+      } catch (_error) {
+        setStatus("Failed to load the selected image.", true);
+        return;
+      }
+      clearResultsOnly();
+      setLocalPreview(uploadedImageData);
+      uploadZone.classList.add("hidden");
+      cameraLaunchWrap.classList.add("hidden");
+      miniChangeWrap.classList.remove("hidden");
+      changeImageBtn.classList.remove("hidden");
+      setStatus("Image loaded. Starting analysis...");
+      void persistCurrentState();
+      await analyzeCurrentImage(file);
+    }
+
+    imageInput.addEventListener("change", () => {
+      const file = imageInput.files[0];
+      if (!file) {
+        return;
+      }
+      void handleLocalFile(file);
+    });
+
+    uploadZone.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      uploadZone.classList.add("dragging");
+    });
+
+    uploadZone.addEventListener("dragleave", () => {
+      uploadZone.classList.remove("dragging");
+    });
+
+    uploadZone.addEventListener("drop", (event) => {
+      event.preventDefault();
+      uploadZone.classList.remove("dragging");
+      const file = event.dataTransfer && event.dataTransfer.files ? event.dataTransfer.files[0] : null;
+      if (!file) {
+        return;
+      }
+      void handleLocalFile(file);
+      const transfer = new DataTransfer();
+      transfer.items.add(file);
+      imageInput.files = transfer.files;
+    });
+
+    changeImageBtn.addEventListener("click", () => {
+      stopCamera();
+      stopScanAnimation();
+      clearResultAutoscroll();
+      stopCustomScroll();
+      cameraPanel.classList.add("hidden");
+      cameraLaunchWrap.classList.remove("hidden");
+      imageInput.click();
+    });
+
+    changeImageBtnResults.addEventListener("click", () => {
+      stopCamera();
+      stopScanAnimation();
+      clearResultAutoscroll();
+      stopCustomScroll();
+      cameraPanel.classList.add("hidden");
+      imageInput.value = "";
+      setStatus("Choose a new image to analyze.");
+      imageInput.click();
+    });
+
+    changeImageBtnProcessing.addEventListener("click", () => {
+      stopCamera();
+      stopScanAnimation();
+      clearResultAutoscroll();
+      stopCustomScroll();
+      cameraPanel.classList.add("hidden");
+      cameraLaunchWrap.classList.remove("hidden");
+      setStage("idle");
+      imageInput.click();
+    });
+
+    cameraInput.addEventListener("change", () => {
+      const file = cameraInput.files[0];
+      if (!file) {
+        return;
+      }
+      void handleLocalFile(file);
+    });
+
+    cameraLaunchBtn.addEventListener("click", () => {
+      void startLiveCamera();
+    });
+
+    cameraLaunchBtnResults.addEventListener("click", () => {
+      void startLiveCameraFromResults();
+    });
+
+    cameraCaptureBtn.addEventListener("click", () => {
+      void captureFromLiveCamera();
+    });
+
+    cameraCancelBtn.addEventListener("click", () => {
+      stopCamera();
+      cameraPanel.classList.add("hidden");
+      uploadZone.classList.remove("hidden");
+      cameraLaunchWrap.classList.remove("hidden");
+      miniChangeWrap.classList.add("hidden");
+      changeImageBtn.classList.add("hidden");
+      setStatus("Camera closed.");
+    });
+
+    resetBtn.addEventListener("click", fullReset);
+
+    quickNavToggle.addEventListener("click", () => {
+      setQuickNavCollapsed(!quickNavCollapsed);
+    });
+
+    for (const [sectionKey, tab] of Object.entries(quickTabs)) {
+      if (!tab) {
+        continue;
+      }
+
+      tab.addEventListener("click", () => {
+        if (tab.disabled) {
+          return;
+        }
+        const target = sectionTargets[sectionKey];
+        if (!target) {
+          return;
+        }
+
+        smoothScrollTo(target, sectionKey === "image" ? "center" : "start", 1500);
+        setActiveQuickSection(sectionKey);
+      });
+    }
+
+    window.addEventListener("scroll", () => {
+      updateActiveQuickTabFromViewport();
+    }, { passive: true });
+
+    window.addEventListener("resize", () => {
+      if (resultsStage.classList.contains("hidden")) {
+        return;
+      }
+      applyQuickNavDefaultForViewport();
+    }, { passive: true });
+
+    async function restoreLastState() {
+      try {
+        const response = await fetch("/api/last_state");
+        if (!response.ok) {
+          return;
+        }
+        const data = await response.json();
+        const state = data && data.state ? data.state : null;
+        if (!state) {
+          return;
+        }
+
+        const savedDetection = plainObject(state.last_detection_result) || {};
+        const savedLlm = plainObject(state.last_llm_response) || {};
+
+        uploadedImageData =
+          typeof savedDetection.uploaded_image === "string" && savedDetection.uploaded_image
+            ? savedDetection.uploaded_image
+            : typeof state.uploaded_image === "string"
+              ? state.uploaded_image
+              : "";
+        if (uploadedImageData) {
+          setLocalPreview(uploadedImageData);
+          uploadZone.classList.add("hidden");
+          cameraLaunchWrap.classList.add("hidden");
+          miniChangeWrap.classList.remove("hidden");
+          changeImageBtn.classList.remove("hidden");
+        } else {
+          miniChangeWrap.classList.add("hidden");
+          changeImageBtn.classList.add("hidden");
+        }
+
+        const savedComponents = Array.isArray(savedDetection.components)
+          ? savedDetection.components
+          : Array.isArray(state.components)
+            ? state.components
+            : [];
+        components = savedComponents;
+        renderComponentList(components);
+
+        const savedAnnotated =
+          typeof savedDetection.annotated_image === "string" && savedDetection.annotated_image
+            ? savedDetection.annotated_image
+            : state.annotated_image;
+
+        if (savedAnnotated) {
+          annotatedImage.src = savedAnnotated;
+        } else {
+          annotatedImage.removeAttribute("src");
+        }
+        
+        meta.innerHTML = state.meta_html || "";
+        
+        // --- Corrected Markdown Parsing Logic ---
+        const rawNotes =
+          typeof savedLlm.learning_notes === "string" && savedLlm.learning_notes
+            ? savedLlm.learning_notes
+            : state.notes || "";
+            
+        renderNotesMarkdown(rawNotes);
+        // ----------------------------------------
+
+        const restoredSources = Array.isArray(savedLlm.sources)
+          ? savedLlm.sources
+          : state.sources || [];
+        const restoredScrapeErrors = Array.isArray(savedLlm.scrape_errors)
+          ? savedLlm.scrape_errors
+          : state.scrape_errors || [];
+        renderSources(restoredSources, restoredScrapeErrors);
+
+        const restoredSelectedLabel = savedLlm.selected_label || state.selected_label;
+        if (restoredSelectedLabel) {
+          selectedLabel = restoredSelectedLabel;
+          markSelectedButton(restoredSelectedLabel);
+        }
+
+        setStatus(state.status || "");
+
+        if (savedAnnotated) {
+          setStage("results");
+        } else {
+          setStage("idle");
+        }
+      } catch (_error) {
+        console.error("Failed to restore last state:", _error);
+      }
+    }
+
+    fullReset(false);
+    void restoreLastState();
+  </script>
+</body>
+</html>

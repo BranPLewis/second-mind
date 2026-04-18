@@ -1,0 +1,22 @@
+@misc{ visualization-tools-for-fpic-component-dataset,
+  title = { Visualization Tools for FPIC-Component Dataset },
+  type = { Computer Vision Tools },
+  author = { Dataset Ninja },
+  howpublished = { \url{ https://datasetninja.com/fpic-component } },
+  url = { https://datasetninja.com/fpic-component },
+  journal = { Dataset Ninja },
+  publisher = { Dataset Ninja },
+  year = { 2026 },
+  month = { apr },
+  note = { visited on 2026-04-17 },
+}
+
+@article{makwana2023pcbsegclassnet,
+  title={PCBSegClassNet—A light-weight network for segmentation and classification of PCB component},
+  author={Makwana, Dhruv and Mittal, Sparsh and others},
+  journal={Expert Systems with Applications},
+  volume={225},
+  pages={120029},
+  year={2023},
+  publisher={Elsevier}
+}

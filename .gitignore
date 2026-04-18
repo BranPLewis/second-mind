@@ -1,0 +1,26 @@
+# Python caching
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Secrets & Credentials (CRITICAL)
+.env
+*.env
+
+# Local data and cache (We don't want local CSVs on GitHub)
+data/
+
+# Modal/ML artifacts
+YOLO_Runs/
+model/
+*.pt
+
+# OS generated files (Mac/Windows junk)
+.DS_Store
+Thumbs.db
