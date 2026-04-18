@@ -1,70 +1,94 @@
 # Second-Mind
 
-Simple local web UI for PCB component detection + Llama 3 learning notes.
+Flask web app for PCB component analysis with:
+- image upload / live camera capture
+- detection via external vision endpoint
+- per-component LLM explanations
+- source scraping + CSV caching
+- citations panel for dataset attribution
 
-## What was added
+## Current App Structure
 
-- `vision_center_object.py`: reusable detector that returns all component detections.
-- `web_ui.py`: Flask app with `/api/analyze` and `/api/explain_component` endpoints.
-- `component_info.py`: SnapEDA/Octopart/ComponentSearchEngine scraping + CSV recall store.
-- `templates/index.html`: upload-based UI with per-component selection and source list.
-- `requirements.txt`: Python dependencies.
+- `app.py` - Flask server and API routes (`/api/analyze`, `/api/explain_component`)
+- `component_info.py` - scraping, relevance filtering, CSV cache (`data/component_sources.csv`)
+- `templates/index.html` - active frontend UI used by Flask
+- `citations.txt` - static citation blocks rendered in UI
+- `site/src/imports/` - static image assets served at `/assets/...`
 
-## Setup
+Note: the React/Vite code under `site/` is not the active runtime UI. The deployed app uses `templates/index.html`.
 
-1. Install dependencies:
+## Requirements
+
+- Python 3.10+
+- pip
+- Environment variables:
+  - `MODAL_URL` (required): URL for your vision inference service
+  - `GROQ_API_KEY` (optional): enables full LLM explanations
+
+If `GROQ_API_KEY` is missing, the app still runs and still returns scraped source links.
+
+## Run Locally (Flask)
+
+1) Clone and enter project
+
+```bash
+git clone <your-repo-url>
+cd PCB_VISION
+```
+
+2) Create and activate virtual environment
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+3) Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Set model paths:
+4) Set environment variables
 
 ```bash
-export YOLO_MODEL_PATH="YOLO_Runs/fpic_seg_v8_s_768/weights/best.pt"
-export LLAMA_MODEL_PATH="/absolute/path/to/your/llama-3-model.gguf"
+export MODAL_URL="https://<your-modal-endpoint>"
+export GROQ_API_KEY="<optional-groq-key>"
 ```
 
-3. Run the web app:
+5) Start Flask server
 
 ```bash
-python web_ui.py
+python app.py
 ```
 
-4. Open:
+6) Open in browser
 
-`http://localhost:8000`
-
-## Notes
-
-- Llama runs fully local through `llama-cpp-python` and a local `.gguf` model file.
-- If startup errors appear in the page, verify paths and installed packages.
-
-## Source-Restricted Recall (SnapEDA + Octopart + ComponentSearchEngine)
-
-- Component source notes are scraped only from:
-  - `snapeda.com`
-  - `octopart.com`
-  - `componentsearchengine.com`
-- Notes are persisted to CSV at `data/component_sources.csv`.
-- When you request explanation for a component, the app:
-  1. Recalls cached notes from CSV.
-  2. If none exist, scrapes SnapEDA/Octopart/ComponentSearchEngine and appends to CSV.
-  3. Feeds those source notes to the local LLM for richer explanations.
-
-## Download a GGUF model once (while online)
-
-You can download a Llama 3 GGUF model before going offline.
-
-Example with `huggingface-cli`:
-
-```bash
-pip install -U "huggingface_hub[cli]"
-huggingface-cli download bartowski/Meta-Llama-3-8B-Instruct-GGUF Meta-Llama-3-8B-Instruct-Q4_K_M.gguf --local-dir ./models
+```text
+http://localhost:8000
 ```
 
-Then set:
+## What the APIs Do
 
-```bash
-export LLAMA_MODEL_PATH="$(pwd)/models/Meta-Llama-3-8B-Instruct-Q4_K_M.gguf"
-```
+- `POST /api/analyze`
+  - Sends uploaded image to `MODAL_URL`
+  - Returns detected components + annotated image
+
+- `POST /api/explain_component`
+  - Recalls relevant cached sources from CSV
+  - Scrapes/adds more sources when needed
+  - Returns explanation + source links
+
+- `POST /api/save_state`, `GET /api/last_state`
+  - Persists client session state in `data/user_states/`
+
+## Data Files Created at Runtime
+
+- `data/component_sources.csv` - scraped source cache
+- `data/user_states/*.json` - per-user UI state
+
+## Troubleshooting
+
+- "Failed to connect to vision processor": verify `MODAL_URL` is set and reachable.
+- No LLM explanation: set `GROQ_API_KEY`; source links should still appear.
+- If sources appear empty after edits, ensure CSV header/schema is valid and app was restarted.
