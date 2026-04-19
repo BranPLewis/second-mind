@@ -322,6 +322,34 @@
       transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
     }
 
+    .camera-launch-content {
+      min-height: inherit;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      gap: 0.75rem;
+      pointer-events: none;
+    }
+
+    .camera-launch-icon {
+      width: 98px;
+      height: 98px;
+      border-radius: 999px;
+      border: 1px solid rgba(95, 168, 255, 0.42);
+      background: rgba(95, 168, 255, 0.16);
+      display: grid;
+      place-items: center;
+      font-size: 2.2rem;
+      animation: bob 2s ease-in-out infinite;
+    }
+
+    .camera-launch-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.55rem, 2.6vw, 2.2rem);
+      letter-spacing: 0.03em;
+      text-transform: none;
+    }
+
     .camera-launch-btn:hover {
       border-color: rgba(95, 168, 255, 0.7);
       box-shadow: 0 0 20px rgba(95, 168, 255, 0.28);
@@ -932,10 +960,19 @@
         height: 100%;
         min-height: 0;
         border-radius: 16px;
-        font-size: 0.72rem;
         display: grid;
         place-items: center;
-        padding: 0.9rem;
+        padding: 1rem 0.85rem;
+      }
+
+      .camera-launch-icon {
+        width: 62px;
+        height: 62px;
+        font-size: 1.5rem;
+      }
+
+      .camera-launch-title {
+        font-size: 1.02rem;
       }
 
       .preview-strip,
@@ -1056,7 +1093,7 @@
         <div class="upload-content">
           <div class="upload-icon">&#8682;</div>
           <div>
-            <h1 class="upload-title">Upload Image for Analysis</h1>
+            <h1 class="upload-title">Upload Image</h1>
             <p class="upload-copy">Drop a PCB image here or click to select. The detector will identify components and the tutor will generate learning notes for selected parts.</p>
           </div>
           <div class="chip-row">
@@ -1070,7 +1107,12 @@
       <input id="cameraInput" type="file" accept="image/*" capture="environment" class="hidden" />
 
       <div id="cameraLaunchWrap" class="camera-launch-wrap">
-        <button id="cameraLaunchBtn" class="camera-launch-btn" type="button">Take Photo</button>
+        <button id="cameraLaunchBtn" class="camera-launch-btn" type="button">
+          <span class="camera-launch-content">
+            <span class="camera-launch-icon">&#128247;</span>
+            <span class="camera-launch-title">Take Photo</span>
+          </span>
+        </button>
       </div>
 
       <div id="miniChangeWrap" class="mini-actions hidden">
