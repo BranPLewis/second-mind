@@ -305,6 +305,7 @@
       margin: 0.48rem auto 0;
       display: none;
       justify-content: center;
+      width: 100%;
     }
 
     .camera-launch-btn {
@@ -320,6 +321,14 @@
       padding: 0.42rem 0.88rem;
       cursor: pointer;
       transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+    }
+
+    #cameraLaunchWrap .camera-launch-btn {
+      width: 100%;
+      min-height: 390px;
+      border: 2px dashed rgba(245, 169, 98, 0.4);
+      border-radius: 16px;
+      padding: 2rem;
     }
 
     .camera-launch-content {
@@ -354,6 +363,11 @@
       border-color: rgba(95, 168, 255, 0.7);
       box-shadow: 0 0 20px rgba(95, 168, 255, 0.28);
       transform: translateY(-1px);
+    }
+
+    #cameraLaunchWrap .camera-launch-btn:hover {
+      border-color: rgba(245, 169, 98, 0.78);
+      box-shadow: 0 0 24px rgba(245, 169, 98, 0.22);
     }
 
     .camera-panel {
@@ -962,6 +976,11 @@
         border-radius: 16px;
         display: grid;
         place-items: center;
+        padding: 1rem 0.85rem;
+      }
+
+      #cameraLaunchWrap .camera-launch-btn {
+        min-height: 0;
         padding: 1rem 0.85rem;
       }
 
