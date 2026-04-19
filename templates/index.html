@@ -1070,16 +1070,7 @@
       <input id="cameraInput" type="file" accept="image/*" capture="environment" class="hidden" />
 
       <div id="cameraLaunchWrap" class="camera-launch-wrap">
-        <button id="cameraLaunchBtn" class="camera-launch-btn" type="button">Use Live Camera</button>
-      </div>
-
-      <div id="cameraPanel" class="camera-panel hidden">
-        <video id="cameraVideo" autoplay playsinline muted></video>
-        <div class="camera-actions">
-          <button id="cameraRefocusBtn" class="mini-btn" type="button">Refocus</button>
-          <button id="cameraCaptureBtn" class="mini-btn" type="button">Capture & Analyze</button>
-          <button id="cameraCancelBtn" class="mini-btn" type="button">Cancel</button>
-        </div>
+        <button id="cameraLaunchBtn" class="camera-launch-btn" type="button">Take Photo</button>
       </div>
 
       <div id="miniChangeWrap" class="mini-actions hidden">
@@ -1118,7 +1109,7 @@
       <div class="status" id="resultStatus"></div>
       <div class="result-top-actions">
         <button id="changeImageBtnResults" class="mini-btn" type="button">Change Image</button>
-        <button id="cameraLaunchBtnResults" class="camera-launch-btn" type="button">Use Live Camera</button>
+        <button id="cameraLaunchBtnResults" class="camera-launch-btn" type="button">Take Photo</button>
       </div>
       <div id="resultImageSpotlight" class="result-image-spotlight">
         <div class="result-media spotlight-media">
@@ -1163,11 +1154,6 @@
     const cameraInput = document.getElementById("cameraInput");
     const cameraLaunchBtn = document.getElementById("cameraLaunchBtn");
     const cameraLaunchWrap = document.getElementById("cameraLaunchWrap");
-    const cameraPanel = document.getElementById("cameraPanel");
-    const cameraVideo = document.getElementById("cameraVideo");
-    const cameraRefocusBtn = document.getElementById("cameraRefocusBtn");
-    const cameraCaptureBtn = document.getElementById("cameraCaptureBtn");
-    const cameraCancelBtn = document.getElementById("cameraCancelBtn");
     const miniChangeWrap = document.getElementById("miniChangeWrap");
     const changeImageBtn = document.getElementById("changeImageBtn");
     const changeImageBtnResults = document.getElementById("changeImageBtnResults");
@@ -1208,7 +1194,6 @@
     let components = [];
     let selectedLabel = null;
     let currentFile = null;
-    let activeCameraStream = null;
     let uploadedImageData = "";
     let latestSources = [];
     let latestScrapeErrors = [];
@@ -1559,7 +1544,6 @@
       previewImage.removeAttribute("src");
       processingImage.removeAttribute("src");
       previewStrip.classList.add("hidden");
-      cameraPanel.classList.add("hidden");
       miniChangeWrap.classList.add("hidden");
       changeImageBtn.classList.add("hidden");
       uploadZone.classList.remove("hidden");
@@ -1799,129 +1783,7 @@
     }
 
     function stopCamera() {
-      if (!activeCameraStream) {
-        return;
-      }
-      for (const track of activeCameraStream.getTracks()) {
-        track.stop();
-      }
-      activeCameraStream = null;
-      cameraVideo.srcObject = null;
-    }
-
-    async function requestCameraRefocus(showStatus = false) {
-      if (!activeCameraStream) {
-        if (showStatus) {
-          setStatus("Camera is not active.", true);
-        }
-        return;
-      }
-
-      const [track] = activeCameraStream.getVideoTracks();
-      if (!track || typeof track.applyConstraints !== "function") {
-        if (showStatus) {
-          setStatus("Refocus is not supported on this device.", true);
-        }
-        return;
-      }
-
-      let applied = false;
-      const capabilities = typeof track.getCapabilities === "function" ? track.getCapabilities() : {};
-      const supportedFocusModes = Array.isArray(capabilities.focusMode) ? capabilities.focusMode : [];
-
-      if (supportedFocusModes.includes("single-shot")) {
-        try {
-          await track.applyConstraints({ advanced: [{ focusMode: "single-shot" }] });
-          applied = true;
-        } catch (_error) {
-          applied = false;
-        }
-      }
-
-      if (supportedFocusModes.includes("continuous")) {
-        try {
-          await track.applyConstraints({ advanced: [{ focusMode: "continuous" }] });
-          applied = true;
-        } catch (_error) {
-          // Ignore and keep fallback behavior.
-        }
-      }
-
-      if (showStatus) {
-        setStatus(
-          applied
-            ? "Refocused. Move closer and keep the board steady before capture."
-            : "Refocus controls are limited on this device. Tap to retry or adjust distance.",
-          !applied,
-        );
-      }
-    }
-
-    async function startLiveCamera() {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        cameraInput.click();
-        return;
-      }
-
-      try {
-        stopCamera();
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: { ideal: "environment" },
-          },
-          audio: false,
-        });
-        activeCameraStream = stream;
-        cameraVideo.srcObject = stream;
-        cameraPanel.classList.remove("hidden");
-        uploadZone.classList.add("hidden");
-        cameraLaunchWrap.classList.add("hidden");
-        await requestCameraRefocus(false);
-        setStatus("Camera ready. Capture when the board is in frame.");
-      } catch (_error) {
-        cameraInput.click();
-      }
-    }
-
-    async function startLiveCameraFromResults() {
-      stopCamera();
-      setStage("idle");
-      uploadZone.classList.add("hidden");
-      cameraLaunchWrap.classList.add("hidden");
-      miniChangeWrap.classList.add("hidden");
-      await startLiveCamera();
-    }
-
-    async function captureFromLiveCamera() {
-      if (!activeCameraStream || !cameraVideo.videoWidth || !cameraVideo.videoHeight) {
-        setStatus("Camera not ready yet. Please wait a moment.", true);
-        return;
-      }
-
-      const canvas = document.createElement("canvas");
-      canvas.width = cameraVideo.videoWidth;
-      canvas.height = cameraVideo.videoHeight;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        setStatus("Could not capture camera frame.", true);
-        return;
-      }
-
-      ctx.drawImage(cameraVideo, 0, 0, canvas.width, canvas.height);
-
-      const blob = await new Promise((resolve) => {
-        canvas.toBlob((out) => resolve(out), "image/jpeg", 0.95);
-      });
-
-      if (!blob) {
-        setStatus("Could not capture camera frame.", true);
-        return;
-      }
-
-      const cameraFile = new File([blob], "camera-capture.jpg", { type: "image/jpeg" });
-      stopCamera();
-      cameraPanel.classList.add("hidden");
-      await handleLocalFile(cameraFile);
+      // No-op now that we use the native phone camera picker.
     }
 
     async function handleLocalFile(file) {
@@ -1983,7 +1845,6 @@
       stopScanAnimation();
       clearResultAutoscroll();
       stopCustomScroll();
-      cameraPanel.classList.add("hidden");
       cameraLaunchWrap.classList.remove("hidden");
       imageInput.click();
     });
@@ -1993,7 +1854,6 @@
       stopScanAnimation();
       clearResultAutoscroll();
       stopCustomScroll();
-      cameraPanel.classList.add("hidden");
       imageInput.value = "";
       setStatus("Choose a new image to analyze.");
       imageInput.click();
@@ -2004,7 +1864,6 @@
       stopScanAnimation();
       clearResultAutoscroll();
       stopCustomScroll();
-      cameraPanel.classList.add("hidden");
       cameraLaunchWrap.classList.remove("hidden");
       setStage("idle");
       imageInput.click();
@@ -2019,33 +1878,11 @@
     });
 
     cameraLaunchBtn.addEventListener("click", () => {
-      void startLiveCamera();
+      cameraInput.click();
     });
 
     cameraLaunchBtnResults.addEventListener("click", () => {
-      void startLiveCameraFromResults();
-    });
-
-    cameraCaptureBtn.addEventListener("click", () => {
-      void captureFromLiveCamera();
-    });
-
-    cameraRefocusBtn.addEventListener("click", () => {
-      void requestCameraRefocus(true);
-    });
-
-    cameraVideo.addEventListener("click", () => {
-      void requestCameraRefocus(false);
-    });
-
-    cameraCancelBtn.addEventListener("click", () => {
-      stopCamera();
-      cameraPanel.classList.add("hidden");
-      uploadZone.classList.remove("hidden");
-      cameraLaunchWrap.classList.remove("hidden");
-      miniChangeWrap.classList.add("hidden");
-      changeImageBtn.classList.add("hidden");
-      setStatus("Camera closed.");
+      cameraInput.click();
     });
 
     resetBtn.addEventListener("click", fullReset);
