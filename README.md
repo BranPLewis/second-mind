@@ -1,3 +1,11 @@
+<p align="center">
+  <img src="second-mind_logo_Transparent.png" alt="Second-Mind Logo" width="300">
+</p>
+
+<p align="center">
+  <img src="second_mind_preview.png" alt="Second-Mind UI Preview" width="600">
+</p>
+
 # Second-Mind
 
 Flask web app for PCB component analysis with:
